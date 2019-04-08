@@ -16,25 +16,20 @@ class OC11:
     def __init__(self, addr=PCA9554A_I2C_ADDRESS):
         self.addr = addr
      
-    def init(self, state=PCA9554A_ALL_OUTPUTS_OFF):
-        self.writePin(0, state)
+    def init(self, state=False):
         self.writePin(1, state)
-        i2c.write(self.addr, PCA9554A_REG_CONFIG)
-        i2c.write(self.addr, PCA9554A_CONF_OUTPUT)
+        self.writePin(2, state)
+        i2c.write(self.addr, bytearray([PCA9554A_REG_CONFIG, PCA9554A_CONF_OUTPUT]))
         return True
     
     def writePin(self, channel, state):
         port_status = self.getStatus() & 0xFF
-        channel = channel << 1
-        
         if state is True:
-            i2c.write(self.addr, PCA9554A_REG_OUTPUT_PORT)
-            i2c.write(self.addr, (channel | port_status))
+            i2c.write(self.addr, bytearray([PCA9554A_REG_OUTPUT_PORT, (channel | port_status)]))
         elif state is False:
-            i2c.write(self.addr, PCA9554A_REG_OUTPUT_PORT)
-            i2c.write(self.addr, ((~channel) & port_status))
+            i2c.write(self.addr, bytearray([PCA9554A_REG_OUTPUT_PORT, ((~channel) & port_status)]))
     
     def getStatus(self):
-        i2c.write(self.addr, PCA9554A_REG_OUTPUT_PORT)
-        pin_state = i2c.read(self.addre, 1)[0]
-        return pin_state
+        i2c.write(self.addr, bytearray([PCA9554A_REG_OUTPUT_PORT]))
+        pin_state = i2c.read(self.addr, 1)
+        return pin_state[0]
